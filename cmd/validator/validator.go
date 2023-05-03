@@ -1,3 +1,17 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
+	"github.com/Boeing/config-file-validator/internal/entity"
+	"github.com/Boeing/config-file-validator/internal/usecase/finder"
+	"github.com/Boeing/config-file-validator/internal/usecase/reporter"
+)
+
 /*
 Validator recusively scans a directory to search for configuration files and
 validates them using the go package for each configuration type.
@@ -15,75 +29,58 @@ The flags are:
     	Subdirectories to exclude when searching for configuration files
 */
 
-package main
-
-import (
-	"flag"
-	"fmt"
-	"github.com/Boeing/config-file-validator/pkg/cli"
-	"log"
-	"os"
-	"strings"
-)
-
-// Parses, validates, and returns the flags
-// flag.String returns a pointer
-// If a required parameter is missing the help
-// output will be displayed and the function
-// will return with exit = 1
-func getFlags() (*string, *string, int) {
-	searchPathPtr := flag.String("search-path", "", "The search path for configuration files")
-	excludeDirsPtr := flag.String("exclude-dirs", "", "Subdirectories to exclude when searching for configuration files")
-	flag.Parse()
-
-	exit := 0
-
-	if *searchPathPtr == "" {
-		fmt.Println("Missing required Parameter. Showing help: ")
-		flag.PrintDefaults()
-		exit = 1
-		return nil, nil, exit
-	}
-
-	return searchPathPtr, excludeDirsPtr, exit
-}
-
-// Takes the flag values as function arguments and
-// transforms them to appropriate types for initializing
-// the CLI.
-// searchPathPtr is changed from a pointer since CLI.init()
-// requires a non-pointer value
-// excludeDirsPtr is changed from a comma separated list
-// of directories to an array of strings
-func getCLIValues(searchPathPtr, excludeDirsPtr *string) (string, []string) {
-	searchPath := *searchPathPtr
-	// since the exclude dirs are a comma separated string
-	// it needs to be split into a slice of strings
-	excludeDirs := strings.Split(*excludeDirsPtr, ",")
-
-	return searchPath, excludeDirs
-}
-
-func mainInit() int {
-	searchPathPtr, excludeDirsPtr, exit := getFlags()
-	if exit != 0 {
-		return exit
-	}
-
-	searchPath, excludeDirs := getCLIValues(searchPathPtr, excludeDirsPtr)
-
-	// Create an instance of the CLI using the
-	// searchPath and excludeDirs values provided
-	// by the command line arguments
-	cli := cli.Init(searchPath, excludeDirs)
-	exitStatus, err := cli.Run()
-	if err != nil {
-		log.Printf("An error occured during CLI execution: %v", err)
-	}
-
-	return exitStatus
-}
-
 func main() {
-	os.Exit(mainInit())
+	search_path := flag.String("search-path", "", "The search path for configuration files")
+	exclude_dirs := flag.String("exclude-dirs", "", "Subdirectories to exclude when searching for configuration files")
+	report_format := flag.String("report-type", "standard", "The format the report should be printed to stdout")
+	flag.Parse()
+	exclude := strings.Split(*exclude_dirs, ",")
+
+	finder := finder.NewService(search_path, exclude)
+	reporter, err := reporter.NewService(*report_format)
+	if err != nil {
+		fmt.Printf("error creating reporter service: %s", err)
+		os.Exit(1)
+	}
+
+	exitCode := execute(finder, reporter)
+
+	os.Exit(exitCode)
+}
+
+func execute(finder finder.InteractorI, reporter reporter.InteractorI) int {
+	found_files, err := finder.Find()
+	if err != nil {
+		fmt.Printf("error finding files: %s", err)
+		return 1
+	}
+
+	var reports []entity.Report
+
+	for _, file := range found_files {
+		fileContent, err := ioutil.ReadFile(file.Path)
+		if err != nil {
+			fmt.Printf("error reading file: %s", err)
+			return 1
+		}
+
+		isValid, err := file.FileType.Validator.Validate(fileContent)
+
+		report := entity.Report{
+			FileName:        file.Name,
+			FilePath:        file.Path,
+			IsValid:         isValid,
+			ValidationError: err,
+		}
+
+		reports = append(reports, report)
+	}
+
+	err = reporter.Print(reports)
+	if err != nil {
+		fmt.Printf("error printing report: %s", err)
+		return 1
+	}
+
+	return 0
 }
