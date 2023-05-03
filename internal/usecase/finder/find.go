@@ -13,11 +13,11 @@ func (s *Service) Find() ([]entity.FileMetadata, error) {
 
 	// check that the path exists before walking it or the error returned
 	// from filepath.Walk will be very confusing and undescriptive
-	if _, err := os.Stat(*s.SearchPath); os.IsNotExist(err) {
+	if _, err := os.Stat(s.SearchPath); os.IsNotExist(err) {
 		return nil, err
 	}
 
-	err := filepath.WalkDir(*s.SearchPath, func(path string, dirEntry fs.DirEntry, err error) error {
+	err := filepath.WalkDir(s.SearchPath, func(path string, dirEntry fs.DirEntry, err error) error {
 		// determine if directory is in the excludeDirs list
 		for _, dir := range s.Exclude {
 			if dirEntry.IsDir() && dirEntry.Name() == dir {

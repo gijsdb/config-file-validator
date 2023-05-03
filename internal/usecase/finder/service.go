@@ -9,7 +9,7 @@ type InteractorI interface {
 	Find() ([]entity.FileMetadata, error)
 }
 
-func NewService(search_path *string, exclude []string) InteractorI {
+func NewService(search_path string, exclude []string) InteractorI {
 	file_types := init_file_types()
 
 	return &Service{
@@ -21,7 +21,7 @@ func NewService(search_path *string, exclude []string) InteractorI {
 
 type Service struct {
 	FileTypes  []entity.FileType
-	SearchPath *string
+	SearchPath string
 	Exclude    []string
 }
 

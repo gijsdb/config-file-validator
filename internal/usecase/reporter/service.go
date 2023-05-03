@@ -19,6 +19,6 @@ func NewService(reporter string) (InteractorI, error) {
 	case "standard":
 		return StdoutReporter{}, nil
 	default:
-		return nil, fmt.Errorf("unsupported file extension: %s", reporter)
+		return nil, fmt.Errorf("unsupported reporter type: %s", reporter)
 	}
 }

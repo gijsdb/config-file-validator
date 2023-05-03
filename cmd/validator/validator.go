@@ -1,17 +1,5 @@
 package main
 
-import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
-	"github.com/Boeing/config-file-validator/internal/entity"
-	"github.com/Boeing/config-file-validator/internal/usecase/finder"
-	"github.com/Boeing/config-file-validator/internal/usecase/reporter"
-)
-
 /*
 Validator recusively scans a directory to search for configuration files and
 validates them using the go package for each configuration type.
@@ -27,7 +15,21 @@ The flags are:
 		The search path for configuration files
     -exclude-dirs string
     	Subdirectories to exclude when searching for configuration files
+	-report-type string
+		Format of printed report, accepts standard or json (default: standard)
 */
+
+import (
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
+	"github.com/Boeing/config-file-validator/internal/entity"
+	"github.com/Boeing/config-file-validator/internal/usecase/finder"
+	"github.com/Boeing/config-file-validator/internal/usecase/reporter"
+)
 
 func main() {
 	search_path := flag.String("search-path", "", "The search path for configuration files")
@@ -36,7 +38,7 @@ func main() {
 	flag.Parse()
 	exclude := strings.Split(*exclude_dirs, ",")
 
-	finder := finder.NewService(search_path, exclude)
+	finder := finder.NewService(*search_path, exclude)
 	reporter, err := reporter.NewService(*report_format)
 	if err != nil {
 		fmt.Printf("error creating reporter service: %s", err)
