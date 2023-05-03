@@ -1,5 +1,5 @@
 <div align="center">
-<img src="./img/logo.png" width="200" height="200"/>
+<img src="./docs/img/logo.png" width="200" height="200"/>
 <h1>Config File Validator</h1>
 </div>
 
@@ -64,7 +64,7 @@ Usage of /validator:
 validator -search-path /path/to/search
 ```
 
-![Standard Run](./img/standard_run.png)
+![Standard Run](./docs/img/standard_run.png)
 
 #### Exclude dirs
 Exclude subdirectories in the search path
@@ -73,14 +73,14 @@ Exclude subdirectories in the search path
 validator -search-path /path/to/search -exclude-dirs=/path/to/search/tests
 ```
 
-![Exclude Dirs Run](./img/exclude_dirs.png)
+![Exclude Dirs Run](./docs/img/exclude_dirs.png)
 
 #### Container Run
 ```
 docker run -it --rm -v /path/to/config/file/location:/test -search-path=/test
 ```
 
-![Standard Run](./img/docker_run.png)
+![Standard Run](./docs/img/docker_run.png)
 
 ## Building from source
 The project can be downloaded and built from source using an environment with golang 1.17+ installed. After successful build, the statically-linked binary can be moved to a location on your operating system PATH.
@@ -132,7 +132,7 @@ docker build . -t config-file-validator
 ```
 
 ## Contributing
-We welcome contributions! Please refer to our [contributing guide](/CONTRIBUTING.md)
+We welcome contributions! Please refer to our [contributing guide](/docs/CONTRIBUTING.md)
 
 ## License
 The Config File Validator is released under the [Apache 2.0](/LICENSE) License
